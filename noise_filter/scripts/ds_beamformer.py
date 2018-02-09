@@ -94,7 +94,7 @@ class DsBeamformer(object):
         delays = DsBeamformer.compute_delays(self.channel_map, self.source, self.frequency)
         max_delay = np.max(delays.values())
         padding = dict(zip(delays.keys(), np.sqrt((np.array(delays.values(), dtype=np.uint) - max_delay)**2)))
-        print delays, padding
+        # print delays, padding
         data = np.array(msg.data, dtype=np.int16).reshape((-1, len(mics)))
         for i, k in enumerate(self.channel_map):
             # self._buffer[k].put(data[:, i])

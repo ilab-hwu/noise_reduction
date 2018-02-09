@@ -16,10 +16,8 @@ from scipy import signal
 class AudioStream(object):
     def __init__(self, name):
         rospy.loginfo("Starting {}.".format(name))
-        self.stream = sd.OutputStream(48000, channels=1, dtype=np.int16)
-        # self.stream = sd.OutputStream(48000, channels=4, dtype=np.int16)
         self.pub = rospy.Publisher("~result", AudioBuffer)
-        rospy.Subscriber("/naoqi_driver_node/audio", AudioBuffer, self.callback)
+        rospy.Subscriber("/mummer_ds_beamforming/result", AudioBuffer, self.callback)
         rospy.loginfo("done")
 
     '''------------------------------------
@@ -174,22 +172,18 @@ class AudioStream(object):
         return (y)
 
     def callback(self, msg):
-        rospy.loginfo(rospy.get_caller_id() + ': %d samples received, freq = %d, channels = %d', len(msg.data),
+        rospy.logdebug(rospy.get_caller_id() + ': %d samples received, freq = %d, channels = %d', len(msg.data),
                       msg.frequency, len(msg.channelMap))
-        print np.fromstring(msg.channelMap, dtype='>u4')
+        data = np.array(msg.data, dtype=np.int16, order='C')
 
-        data = np.array(msg.data[0::4], dtype=np.int16, order='C')
-
-        # data = np.array(msg.data, dtype=np.int16).reshape((-1, 4))
-
-        start = rospy.Time.now().to_sec()
-        print data.shape, rospy.Time.now().to_sec() - start
-        a = AudioBuffer()
-        a.header = msg.header
-        a.frequency = msg.frequency
-        a.channelMap = [0]
-        a.data = self.reduce_noise_centroid_mb(data, msg.frequency)
-        self.pub.publish(a)
+        self.pub.publish(
+            AudioBuffer(
+                header=msg.header,
+                frequency=msg.frequency,
+                channelMap=msg.channelMap,
+                data=self.reduce_noise_mfcc_up(data, msg.frequency)
+            )
+        )
 
 if __name__ == "__main__":
     rospy.init_node("noise_filter_node")
