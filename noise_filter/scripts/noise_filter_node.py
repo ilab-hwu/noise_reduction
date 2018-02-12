@@ -3,14 +3,12 @@
 
 import rospy
 from naoqi_bridge_msgs.msg import AudioBuffer
-import sounddevice as sd
 import numpy as np
 import librosa
 from pysndfx import AudioEffectsChain
 import math
 import python_speech_features
 import scipy as sp
-from scipy import signal
 
 
 class AudioStream(object):
