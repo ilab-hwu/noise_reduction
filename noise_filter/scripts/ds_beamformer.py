@@ -105,7 +105,7 @@ class DsBeamformer(object):
             # print "DATA"
             # pprint(data.tolist())
             # print "PADDED"
-            # pprint(padded_data.tolist())
+            pprint(padded_data.tolist())
             final_data = DsBeamformer.sum_channels(padded_data, len(mics))
             # print "FINAL"
             # pprint(final_data.tolist())
@@ -117,7 +117,7 @@ class DsBeamformer(object):
             #     self._buffer[k].put([0]*delays[k])
             #     self._buffer[k].put(data[:, i])
             #     self._buffer[k].put([0]*padding[k])
-        print "Callback time:", rospy.Time.now().to_sec() - start
+        # print "Callback time:", rospy.Time.now().to_sec() - start
 
     @staticmethod
     def compute_delays(channel_map, source, sampling_rate):
