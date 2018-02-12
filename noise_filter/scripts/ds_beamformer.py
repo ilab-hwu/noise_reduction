@@ -96,6 +96,7 @@ class DsBeamformer(object):
         for i, source in enumerate(self.sources):
             # delays, padding = DsBeamformer.compute_delays(self.channel_map, source, self.frequency)
             delays = DsBeamformer.compute_delays(self.channel_map, source, self.frequency)
+            print delays
             max_delay = np.max(delays.values())
             # print "Source {}:".format(i), delays, padding
             data = np.array(msg.data, dtype=np.int16).reshape((-1, len(mics)))
@@ -105,7 +106,7 @@ class DsBeamformer(object):
             # print "DATA"
             # pprint(data.tolist())
             # print "PADDED"
-            pprint(padded_data.tolist())
+            # pprint(padded_data.tolist())
             final_data = DsBeamformer.sum_channels(padded_data, len(mics))
             # print "FINAL"
             # pprint(final_data.tolist())
