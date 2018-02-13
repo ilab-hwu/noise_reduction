@@ -40,7 +40,7 @@ class AudioStream(object):
         #     self.noise = np.array(yaml.load(f)).reshape(-1, 4)
         rospy.Subscriber("/mummer_ds_beamforming/result", AudioBuffer, self.callback)
         # rospy.Subscriber("/naoqi_driver_node/audio", AudioBuffer, self.callback)
-        print self.noise.shape
+        # print self.noise.shape
         rospy.loginfo("done")
 
     def dyn_callback(self, config, level):
