@@ -228,7 +228,7 @@ class AudioStream(object):
     def callback(self, msg):
         rospy.logdebug(rospy.get_caller_id() + ': %d samples received, freq = %d, channels = %d', len(msg.data),
                       msg.frequency, len(msg.channelMap))
-        data = np.array(np.array(msg.data).reshape(-1, 4)[:, 0], dtype=np.int16, order='C')
+        data = np.array(msg.data, dtype=np.int16, order='C')
 
         for i in range(len(self.func_order.keys())):
             data = self.functions[self.func_order[i]](data, msg.frequency)
