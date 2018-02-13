@@ -7,6 +7,7 @@ from naoqi_bridge_msgs.msg import AudioBuffer
 # from Queue import Queue, Empty
 # from future.moves import queue
 from pprint import pprint
+from collections import OrderedDict
 
 
 SPEED_OF_SOUND = 343.3
@@ -96,12 +97,12 @@ class DsBeamformer(object):
         for i, source in enumerate(self.sources):
             # delays, padding = DsBeamformer.compute_delays(self.channel_map, source, self.frequency)
             delays = DsBeamformer.compute_delays(self.channel_map, source, self.frequency)
-            print delays
-            max_delay = np.max(delays.values())
-            # print "Source {}:".format(i), delays, padding
+            delays = [delays[k] for k in self.channel_map]
+            max_delay = np.max(delays)
+            # print "Source {}:".format(i), delays, self.channel_map
             data = np.array(msg.data, dtype=np.int16).reshape((-1, len(mics)))
             padded_data = np.zeros((data.shape[0] + max_delay, data.shape[1]))
-            for j, d in enumerate(delays.values()):
+            for j, d in enumerate(delays):
                 np.put(padded_data[:, j], np.arange(d, data.shape[0]+d), data[:, j])
             # print "DATA"
             # pprint(data.tolist())

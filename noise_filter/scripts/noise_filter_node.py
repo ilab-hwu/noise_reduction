@@ -9,14 +9,47 @@ from pysndfx import AudioEffectsChain
 import math
 import python_speech_features
 import scipy as sp
+import adaptfilt as af
+import yaml
+import padasip as pa
+import scipy.fftpack as fftpack
+from noise_filter.cfg import NoiseFilterConfig
+from dynamic_reconfigure.server import Server as DynServer
+
+
+# Most of the functions are taken from https://github.com/dodiku/noise_reduction
 
 
 class AudioStream(object):
     def __init__(self, name):
         rospy.loginfo("Starting {}.".format(name))
-        self.pub = rospy.Publisher("~result", AudioBuffer)
+
+        self.functions = {
+            "none": lambda y, _: y,
+            "power": self.reduce_noise_power,
+            "centroid_s": self.reduce_noise_centroid_s,
+            "centroid_mb": self.reduce_noise_centroid_mb,
+            "mfcc_down": self.reduce_noise_mfcc_down,
+            "mfcc_up": self.reduce_noise_mfcc_up,
+            "median": self.reduce_noise_median
+        }
+
+        self.dyn_srv = DynServer(NoiseFilterConfig, self.dyn_callback)
+        self.pub = rospy.Publisher("~result", AudioBuffer, queue_size=1)
+        with open('/home/cd32/noise.yaml', 'r') as f:
+            self.noise = np.array(yaml.load(f)).reshape(-1, 4)
         rospy.Subscriber("/mummer_ds_beamforming/result", AudioBuffer, self.callback)
+        # rospy.Subscriber("/naoqi_driver_node/audio", AudioBuffer, self.callback)
+        print self.noise.shape
         rospy.loginfo("done")
+
+    def dyn_callback(self, config, level):
+        self.func_order = {}
+        for k, v in config.items():
+            key = k.split('_')
+            if key[0] == "Function":
+                self.func_order[int(key[1])] = v
+        return config
 
     '''------------------------------------
     NOISE REDUCTION USING POWER:
@@ -37,6 +70,29 @@ class AudioStream(object):
         y_clean = less_noise(y)
 
         return y_clean
+
+    def least_mean_squares(self, y, sr):
+        # noise = self.noise[:, 0].astype(float)/np.iinfo(np.int16).max
+        # y = y.astype(float)/np.iinfo(np.int16).max
+        # print "NOISE", noise
+        # print "INPUT", y
+        # w, _, _ = af.lms(noise, y, 20, 0.03)
+        # w *= np.iinfo(np.int16).max
+        # print "CLEAN", w
+        # return w
+
+        n = 20
+        x = pa.input_from_history(y, n)[:-1]
+        print x
+        print y.shape
+        # y = y[n:]
+        f = pa.filters.FilterRLS(mu=0.9, n=n)
+        y, e, w = f.run(y, x)
+        return y
+
+    def subtract_noise(self, y, sr):
+        return np.round(np.fft.irfft(np.fft.rfft(y)/np.fft.rfft(self.noise[:, 0]))).astype(np.int16)
+
 
     '''------------------------------------
     NOISE REDUCTION USING CENTROID ANALYSIS:
@@ -172,14 +228,17 @@ class AudioStream(object):
     def callback(self, msg):
         rospy.logdebug(rospy.get_caller_id() + ': %d samples received, freq = %d, channels = %d', len(msg.data),
                       msg.frequency, len(msg.channelMap))
-        data = np.array(msg.data, dtype=np.int16, order='C')
+        data = np.array(np.array(msg.data).reshape(-1, 4)[:, 0], dtype=np.int16, order='C')
+
+        for i in range(len(self.func_order.keys())):
+            data = self.functions[self.func_order[i]](data, msg.frequency)
 
         self.pub.publish(
             AudioBuffer(
                 header=msg.header,
                 frequency=msg.frequency,
                 channelMap=msg.channelMap,
-                data=self.reduce_noise_mfcc_up(data, msg.frequency)
+                data=data
             )
         )
 
