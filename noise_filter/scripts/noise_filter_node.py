@@ -38,7 +38,8 @@ class AudioStream(object):
         self.pub = rospy.Publisher("~result", AudioBuffer, queue_size=1)
         # with open('/home/cd32/noise.yaml', 'r') as f:
         #     self.noise = np.array(yaml.load(f)).reshape(-1, 4)
-        rospy.Subscriber("/mummer_ds_beamforming/result", AudioBuffer, self.callback)
+        # rospy.Subscriber("/mummer_ds_beamforming/result", AudioBuffer, self.callback)
+        rospy.Subscriber("/ad_to_ab_node/audio_buffer", AudioBuffer, self.callback)
         # rospy.Subscriber("/naoqi_driver_node/audio", AudioBuffer, self.callback)
         # print self.noise.shape
         rospy.loginfo("done")
