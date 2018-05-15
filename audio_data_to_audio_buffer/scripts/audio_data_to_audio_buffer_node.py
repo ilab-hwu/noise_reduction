@@ -15,14 +15,17 @@ class Data2Buffer(object):
         rospy.loginfo("started '{}'.".format(name))
 
     def callback(self, msg):
+        data = np.fromstring(msg.data, dtype=np.uint8)
+        rospy.loginfo("received msg of length: {} and type {}".format(len(data),
+                                                                      type(data)))
         a = AudioBuffer()
-        b = bytearray(len(msg.data))
-        b[:] = msg.data
-        data = np.frombuffer(b, dtype=np.uint16)
-        print type(data)
+        # b = bytearray(len(msg.data))
+        # b[:] = msg.data
+        # data = np.frombuffer(b, dtype=np.uint16)
+        # print type(data)
         a.header.stamp = rospy.Time.now()
-        data = np.array(b, dtype=np.uint16)#.reshape(-1,2)[:,0]
-        a.data = data.tolist()
+        data = np.array(data, dtype=np.uint16)#.reshape(-1,2)[:,0]
+        a.data = data# .tolist()
         self.pub.publish(a)
 
 
