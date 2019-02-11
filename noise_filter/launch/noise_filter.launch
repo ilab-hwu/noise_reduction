@@ -1,6 +1,8 @@
 <launch>
 
   <node name="mummer_ds_beamforming" pkg="noise_filter" type="ds_beamformer.py" output="screen" respawn="true"/>
-  <node name="noise_filter_node" pkg="noise_filter" type="noise_filter_node.py" output="screen" respawn="true"/>
+  <node name="noise_filter_node" pkg="noise_filter" type="noise_filter_node.py" output="screen" respawn="true">
+    <param name="topic" type="string" value="/mummer_ds_beamforming/result"/>
+  </node>
 
 </launch>
